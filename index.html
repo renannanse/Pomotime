@@ -1,0 +1,658 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomotime - Foco & Tarefas</title>
+    <style>
+        :root {
+            --bg-primary: #121214;
+            --bg-surface: #1e1e24;
+            --accent-pomodoro: #f97316;
+            --accent-short: #06b6d4;
+            --accent-long: #8b5cf6;
+            --accent-custom: #10b981;
+            --text-color: #f4f4f5;
+            --text-muted: #a1a1aa;
+            --current-accent: var(--accent-pomodoro);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            transition: background-color 0.5s ease;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 420px;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .app-title {
+            text-align: center;
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+            color: var(--current-accent);
+            transition: color 0.3s ease;
+        }
+
+        .modes {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 5px;
+            border-radius: 12px;
+        }
+
+        .mode-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 8px 10px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn.active {
+            background: var(--current-accent);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Configurações de Som e Ambiente */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .setting-box {
+            background: rgba(0, 0, 0, 0.15);
+            padding: 10px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .setting-box label {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .setting-box select {
+            background: #27272a;
+            border: 1px solid #3f3f46;
+            color: #fff;
+            padding: 6px;
+            border-radius: 6px;
+            outline: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .custom-time-box {
+            display: none;
+            margin-bottom: 20px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.15);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .custom-time-box input {
+            width: 80px;
+            padding: 8px;
+            font-size: 1.1rem;
+            text-align: center;
+            background: #27272a;
+            border: 1px solid #3f3f46;
+            color: #fff;
+            border-radius: 6px;
+            outline: none;
+        }
+
+        .custom-time-box button {
+            padding: 8px 15px;
+            background: var(--accent-custom);
+            border: none;
+            color: white;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+
+        .timer {
+            font-size: 4.5rem;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 25px;
+            letter-spacing: 2px;
+            color: #ffffff;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .control-btn {
+            width: 100%;
+            background-color: var(--current-accent);
+            color: #ffffff;
+            border: none;
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding: 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            transition: transform 0.1s, background-color 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 30px;
+        }
+
+        .control-btn:hover {
+            filter: brightness(1.1);
+        }
+
+        .control-btn:active {
+            transform: scale(0.98);
+        }
+
+        .tasks-section {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 20px;
+        }
+
+        .tasks-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .tasks-header h3 {
+            font-size: 1rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .task-form {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .task-input {
+            flex: 1;
+            padding: 10px 12px;
+            background: #27272a;
+            border: 1px solid #3f3f46;
+            color: #fff;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        .task-input:focus {
+            border-color: var(--current-accent);
+        }
+
+        .add-task-btn {
+            background: #3f3f46;
+            color: white;
+            border: none;
+            padding: 0 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .add-task-btn:hover {
+            background: #52525b;
+        }
+
+        .task-list {
+            list-style: none;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .task-item.completed span {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .task-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .task-delete {
+            background: transparent;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 1rem;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .task-delete:hover {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="app-container">
+        <!-- Título do Aplicativo -->
+        <h1 class="app-title">Pomotime</h1>
+
+        <!-- Modos de Tempo -->
+        <div class="modes">
+            <button class="mode-btn active" onclick="setMode('pomodoro', 25, this)">Pomodoro</button>
+            <button class="mode-btn" onclick="setMode('shortBreak', 5, this)">Pausa C.</button>
+            <button class="mode-btn" onclick="setMode('longBreak', 15, this)">Pausa L.</button>
+            <button class="mode-btn" onclick="setMode('custom', 0, this)">Personalizar</button>
+        </div>
+
+        <!-- Seções de Configurações (Alarme e Sons de Fundo) -->
+        <div class="settings-grid">
+            <div class="setting-box">
+                <label for="alarm-sound">Alarme Final:</label>
+                <select id="alarm-sound" onchange="previewSound()">
+                    <option value="bell">Sino Suave</option>
+                    <option value="beep">Bipe Triplo</option>
+                    <option value="digital">Digital</option>
+                    <option value="marimba">Marimba</option>
+                    <option value="gong">Gongo Zen</option>
+                </select>
+            </div>
+            <div class="setting-box">
+                <label for="ambient-sound">Som Ambiente:</label>
+                <select id="ambient-sound" onchange="toggleAmbientSound()">
+                    <option value="none">Desligado</option>
+                    <option value="rain">Chuva Suave</option>
+                    <option value="waves">Onde do Mar</option>
+                    <option value="vinyl">Vinil / Lofi</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Caixa para digitar o tempo customizado -->
+        <div class="custom-time-box" id="custom-box">
+            <input type="number" id="custom-minutes-input" min="1" max="180" placeholder="Min">
+            <button onclick="applyCustomTime()">Definir</button>
+        </div>
+
+        <!-- Visor do Timer -->
+        <div class="timer" id="timer-display">25:00</div>
+
+        <!-- Botão Iniciar/Pausar -->
+        <button class="control-btn" id="start-btn" onclick="toggleTimer()">Iniciar</button>
+
+        <!-- Seção de Tarefas -->
+        <div class="tasks-section">
+            <div class="tasks-header">
+                <h3>Tarefas de Foco</h3>
+            </div>
+            <div class="task-form">
+                <input type="text" id="new-task-input" class="task-input" placeholder="Adicionar nova tarefa...">
+                <button class="add-task-btn" onclick="addTask()">+</button>
+            </div>
+            <ul class="task-list" id="task-list">
+                <!-- As tarefas serão inseridas aqui via JavaScript -->
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let timerMinutes = 25;
+        let timerSeconds = 0;
+        let interval = null;
+        let isRunning = false;
+        let currentMode = 'pomodoro';
+
+        const display = document.getElementById('timer-display');
+        const startBtn = document.getElementById('start-btn');
+        const customBox = document.getElementById('custom-box');
+        const customInput = document.getElementById('custom-minutes-input');
+        const taskList = document.getElementById('task-list');
+        const newTaskInput = document.getElementById('new-task-input');
+        const alarmSelect = document.getElementById('alarm-sound');
+        const ambientSelect = document.getElementById('ambient-sound');
+
+        // Web Audio API para alarmes e sons gerados por código (sem precisar de arquivos externos)
+        let audioCtx = null;
+        let ambientNode = null;
+        let ambientGain = null;
+        let ambientTimer = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            initAudio();
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'bell') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, now);
+                osc.frequency.exponentialRampToValueAtTime(220, now + 1.2);
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 1.2);
+            } else if (type === 'beep') {
+                for (let i = 0; i < 3; i++) {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(600, now + (i * 0.2));
+                    gain.gain.setValueAtTime(0.3, now + (i * 0.2));
+                    gain.gain.setValueAtTime(0, now + (i * 0.2) + 0.1);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + (i * 0.2));
+                    osc.stop(now + (i * 0.2) + 0.1);
+                }
+            } else if (type === 'digital') {
+                for (let i = 0; i < 2; i++) {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(440, now + (i * 0.3));
+                    osc.frequency.setValueAtTime(880, now + (i * 0.3) + 0.15);
+                    gain.gain.setValueAtTime(0.2, now + (i * 0.3));
+                    gain.gain.setValueAtTime(0, now + (i * 0.3) + 0.25);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + (i * 0.3));
+                    osc.stop(now + (i * 0.3) + 0.25);
+                }
+            } else if (type === 'marimba') {
+                const freqs = [523.25, 659.25, 783.99, 1046.5]; // Acorde C
+                freqs.forEach((f, i) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(f, now + (i * 0.12));
+                    gain.gain.setValueAtTime(0.4, now + (i * 0.12));
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + (i * 0.12) + 0.4);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + (i * 0.12));
+                    osc.stop(now + (i * 0.12) + 0.4);
+                });
+            } else if (type === 'gong') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.exponentialRampToValueAtTime(80, now + 3.0);
+                gain.gain.setValueAtTime(0.7, now);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + 3.0);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 3.0);
+            }
+        }
+
+        function previewSound() {
+            playSound(alarmSelect.value);
+        }
+
+        // Gerenciamento de Sons Ambiente (Chuva, Ondas, Vinil gerados sinteticamente via ruído branco)
+        function stopAmbientSound() {
+            if (ambientTimer) {
+                clearInterval(ambientTimer);
+                ambientTimer = null;
+            }
+            if (ambientGain) {
+                ambientGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.5);
+                setTimeout(() => {
+                    if (ambientNode) {
+                        ambientNode.stop();
+                        ambientNode.disconnect();
+                        ambientNode = null;
+                    }
+                }, 600);
+            }
+        }
+
+        function toggleAmbientSound() {
+            initAudio();
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const type = ambientSelect.value;
+            stopAmbientSound();
+
+            if (type === 'none') return;
+
+            // Cria um buffer de ruído branco para simular chuva/ondas/vinil
+            const bufferSize = audioCtx.sampleRate * 2;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+
+            ambientNode = audioCtx.createBufferSource();
+            ambientNode.buffer = buffer;
+            ambientNode.loop = true;
+
+            const filter = audioCtx.createBiquadFilter();
+            ambientGain = audioCtx.createGain();
+
+            if (type === 'rain') {
+                filter.type = 'lowpass';
+                filter.frequency.value = 800;
+                ambientGain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            } else if (type === 'waves') {
+                filter.type = 'bandpass';
+                filter.frequency.value = 400;
+                filter.Q.value = 1.0;
+                ambientGain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                
+                // Simula o vai-e-vem das ondas modulando o volume
+                let mod = 0;
+                ambientTimer = setInterval(() => {
+                    if (!ambientGain) return;
+                    mod += 0.05;
+                    const vol = 0.1 + Math.sin(mod) * 0.08;
+                    ambientGain.gain.setTargetAtTime(vol, audioCtx.currentTime, 0.5);
+                }, 200);
+            } else if (type === 'vinyl') {
+                filter.type = 'highpass';
+                filter.frequency.value = 1200;
+                ambientGain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+            }
+
+            ambientNode.connect(filter);
+            filter.connect(ambientGain);
+            ambientGain.connect(audioCtx.destination);
+            ambientNode.start();
+        }
+
+        function updateDisplay() {
+            const minutesStr = String(timerMinutes).padStart(2, '0');
+            const secondsStr = String(timerSeconds).padStart(2, '0');
+            display.textContent = `${minutesStr}:${secondsStr}`;
+            document.title = `${minutesStr}:${secondsStr} - Pomotime`;
+        }
+
+        function setMode(mode, minutes, btn) {
+            clearInterval(interval);
+            isRunning = false;
+            startBtn.textContent = 'Iniciar';
+            currentMode = mode;
+
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            if (mode === 'pomodoro') {
+                document.documentElement.style.setProperty('--current-accent', 'var(--accent-pomodoro)');
+                customBox.style.display = 'none';
+                timerMinutes = 25;
+                timerSeconds = 0;
+            } else if (mode === 'shortBreak') {
+                document.documentElement.style.setProperty('--current-accent', 'var(--accent-short)');
+                customBox.style.display = 'none';
+                timerMinutes = 5;
+                timerSeconds = 0;
+            } else if (mode === 'longBreak') {
+                document.documentElement.style.setProperty('--current-accent', 'var(--accent-long)');
+                customBox.style.display = 'none';
+                timerMinutes = 15;
+                timerSeconds = 0;
+            } else if (mode === 'custom') {
+                document.documentElement.style.setProperty('--current-accent', 'var(--accent-custom)');
+                customBox.style.display = 'block';
+                customInput.focus();
+                return;
+            }
+
+            updateDisplay();
+        }
+
+        function applyCustomTime() {
+            const val = parseInt(customInput.value);
+            if (isNaN(val) || val <= 0) {
+                alert('Por favor, insira um número válido de minutos.');
+                return;
+            }
+            timerMinutes = val;
+            timerSeconds = 0;
+            updateDisplay();
+        }
+
+        function toggleTimer() {
+            if (isRunning) {
+                clearInterval(interval);
+                isRunning = false;
+                startBtn.textContent = 'Iniciar';
+            } else {
+                if (timerMinutes === 0 && timerSeconds === 0) {
+                    alert('Defina um tempo válido primeiro!');
+                    return;
+                }
+                isRunning = true;
+                startBtn.textContent = 'Pausar';
+                interval = setInterval(() => {
+                    if (timerSeconds === 0) {
+                        if (timerMinutes === 0) {
+                            clearInterval(interval);
+                            isRunning = false;
+                            startBtn.textContent = 'Iniciar';
+                            playSound(alarmSelect.value);
+                            alert('Tempo esgotado! Bom trabalho!');
+                            return;
+                        }
+                        timerMinutes--;
+                        timerSeconds = 59;
+                    } else {
+                        timerSeconds--;
+                    }
+                    updateDisplay();
+                }, 1000);
+            }
+        }
+
+        function addTask() {
+            const text = newTaskInput.value.trim();
+            if (!text) return;
+
+            const li = document.createElement('li');
+            li.className = 'task-item';
+            
+            li.innerHTML = `
+                <div class="task-info" onclick="toggleTask(this)">
+                    <input type="checkbox" style="cursor: pointer;">
+                    <span>${text}</span>
+                </div>
+                <button class="task-delete" onclick="deleteTask(this)">✕</button>
+            `;
+
+            taskList.appendChild(li);
+            newTaskInput.value = '';
+        }
+
+        function toggleTask(element) {
+            const item = element.parentElement;
+            const checkbox = element.querySelector('input[type="checkbox"]');
+            item.classList.toggle('completed');
+            checkbox.checked = item.classList.contains('completed');
+        }
+
+        function deleteTask(button) {
+            button.parentElement.remove();
+        }
+
+        newTaskInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addTask();
+            }
+        });
+
+        updateDisplay();
+    </script>
+</body>
+</html>
